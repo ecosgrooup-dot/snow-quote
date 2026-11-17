@@ -165,6 +165,59 @@ body.storm #snow span{opacity:.95;color:#cfe4fb}
 @media (max-width:560px){.plow{width:88px;bottom:18px}.hero .in{padding-bottom:66px}}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
+/* ---- mobile optimizations ---- */
+@media (max-width:560px){
+  /* Tool buttons: smaller, wrap nicely */
+  .row{gap:6px}
+  .row button{padding:8px 10px;font-size:.82rem}
+  .row .sep{display:none}
+  /* Map: taller relative to screen, easier to draw on */
+  #map{height:56vh;min-height:280px;border-radius:6px}
+  /* Action buttons below map: horizontal scroll instead of wrap */
+  .row:last-child{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:6px;padding-bottom:4px}
+  /* Side panel: tighter on mobile */
+  .side .panel{padding:12px}
+  dl{gap:4px 8px;font-size:.9rem}
+  .total{font-size:1.4rem}
+  .methods{grid-template-columns:1fr 1fr;gap:5px}
+  .methods li{padding:6px 7px;font-size:.78rem}
+  .methods svg{width:16px;height:16px}
+  .pay .payt{font-size:.84rem}
+  .panel .note{font-size:.78rem}
+  /* Send form: tighter spacing */
+  label{font-size:.82rem;gap:3px}
+  textarea{min-height:80px;font-size:.76rem}
+  /* How-it-works cards in hero */
+  .band .how li{padding:7px 8px}
+  .band .how b{font-size:.9rem}
+  .band .how span{font-size:.78rem}
+  .band .how .num{width:22px;height:22px;font-size:.78rem}
+  /* Hero text tighter */
+  .hero .in{padding-top:14px;padding-bottom:56px;gap:8px}
+  .hero .sub{font-size:.88rem}
+  /* Search card */
+  .searchcard{padding:8px;gap:4px}
+  .searchcard input{padding:11px 10px;font-size:15px}
+  .searchcard button{padding:11px 14px;font-size:.9rem}
+  /* Estimate section heading */
+  h2{font-size:.72rem}
+  /* Extras: QR and weather */
+  .qrrow{gap:10px}
+  .qr{width:100px;height:100px}
+  .ways .way{padding:7px 8px;font-size:.88rem}
+  .ways .note{font-size:.78rem}
+  /* Footer */
+  footer{font-size:.76rem;padding-bottom:20px}
+  /* Sticky price bar at bottom */
+  .price-sticky{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:2px solid var(--brand);padding:8px 16px;z-index:400;align-items:center;justify-content:space-between;box-shadow:0 -4px 12px rgba(0,0,0,.12)}
+  .price-sticky .p{font-size:1.1rem;font-weight:700;color:var(--brand)}
+  .price-sticky .l{font-size:.76rem;color:var(--muted)}
+  .price-sticky button{padding:9px 14px;font-size:.88rem}
+  body{padding-bottom:60px}
+}
+@media (min-width:561px){
+  .price-sticky{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -307,6 +360,10 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 
 <footer>MN Snow Removal, a service of Ecos Group LLC · Minneapolis, MN · (612) 564-5857 · ecosgrooup@gmail.com · <a href="home/">About us and prices</a></footer>
 
+<div class="price-sticky" id="pricebar" hidden>
+  <div><span class="p" id="barPrice">—</span><br><span class="l">per season</span></div>
+  <button class="primary" onclick="document.getElementById('who').scrollIntoView({behavior:'smooth'})">Send request</button>
+</div>
 <div id="snow" aria-hidden="true"></div>
 <script>
 (function(){

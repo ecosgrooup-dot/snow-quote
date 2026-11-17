@@ -212,6 +212,13 @@
     else { $("planName").textContent = q.plan + " · season"; setPrice("pSeason", q.season, usd(q.season)); $("pMonth").textContent = usd(q.month) + " / month"; $("pVisit").textContent = usd(q.visit); }
     $("pPrepay").textContent = q && !q.custom ? usd(q.prepay) : "—";
     $("discNote").hidden = !(q && q.discounted);
+    // Mobile sticky price bar
+    var bar = document.getElementById("pricebar"), bp = document.getElementById("barPrice");
+    if (bar && bp) {
+      if (q && !q.custom) { bp.textContent = usd(q.season); bar.hidden = false; }
+      else if (q && q.custom) { bp.textContent = "Custom"; bar.hidden = false; }
+      else { bar.hidden = true; }
+    }
   }
 
   // ---------- address search ----------
