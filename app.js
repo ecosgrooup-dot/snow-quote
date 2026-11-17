@@ -60,52 +60,79 @@
     if (s.k === "r") return L.polygon(rectPts(s.p[0], s.p[1]), o);
     return L.polygon(s.p, o);
   }
-  var live = null, liveLayer = null, pointers = 0;
+  var live = null, liveLayer = null, pointers = 0, erasing = false, startPx = null;
   function render() { layer.clearLayers(); shapes.forEach(function (s) { toLayer(s).addTo(layer); }); }
   function canPaint() { return !moving && map.getZoom() >= 17; }
   function baseHint() {
     if (map.getZoom() < 17) return "Type your address above to see your property.";
-    return moving ? "Move the map with your finger. Press Paint when you are ready." : "Paint with your finger (or mouse) over " + NAME[kind] + ".";
+    if (moving) return "Move the map with your finger. Press Move map again when you are ready.";
+    if (erasing) return "Tap any colored box to remove it.";
+    return "Press and drag to draw a box over " + NAME[kind] + ".";
   }
   function setHint(t, cls) { $("hint").textContent = t || baseHint(); $("hint").className = "hint" + (cls ? " " + cls : ""); }
   function syncMode() {
     if (canPaint()) map.dragging.disable(); else map.dragging.enable();
-    $("map").style.cursor = canPaint() ? "crosshair" : "grab";
-    $("move").setAttribute("aria-pressed", moving); $("move").textContent = moving ? "Paint" : "Move map";
+    $("map").style.cursor = !canPaint() ? "grab" : erasing ? "pointer" : "crosshair";
+    $("move").setAttribute("aria-pressed", moving); $("eraser").setAttribute("aria-pressed", erasing && !moving);
     setHint();
   }
   function evLatLng(e) { var ll = map.mouseEventToLatLng(e); return [+ll.lat.toFixed(6), +ll.lng.toFixed(6)]; }
+  // Topmost shape under a point, for the eraser.
+  function hit(p) {
+    var pt = map.latLngToContainerPoint(p);
+    for (var i = shapes.length - 1; i >= 0; i--) {
+      var s = shapes[i], pts = (s.k === "r" ? rectPts(s.p[0], s.p[1]) : s.p).map(function (q) { return map.latLngToContainerPoint(q); });
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      pts.forEach(function (q) { minX = Math.min(minX, q.x); maxX = Math.max(maxX, q.x); minY = Math.min(minY, q.y); maxY = Math.max(maxY, q.y); });
+      var pad = s.k === "r" || s.k === "p" ? 6 : 14;
+      if (pt.x >= minX - pad && pt.x <= maxX + pad && pt.y >= minY - pad && pt.y <= maxY + pad) return i;
+    }
+    return -1;
+  }
   var el = $("map");
   el.addEventListener("pointerdown", function (e) {
     if (e.target.closest(".leaflet-control")) return;
     pointers++;
     if (pointers > 1) { if (liveLayer) { liveLayer.remove(); liveLayer = null; } live = null; return; }   // second finger: let the map zoom
     if (!canPaint() || (e.pointerType === "mouse" && e.button !== 0)) return;
-    live = { t: kind, k: "b", p: [evLatLng(e)] }; liveLayer = toLayer(live).addTo(map);
+    var p = evLatLng(e);
+    if (erasing) {
+      var i = hit(p);
+      if (i >= 0) { shapes.splice(i, 1); render(); stats(); setHint(shapes.length ? "Removed. Tap another box, or pick a color to keep drawing." : "All clear. Pick a color to draw again."); }
+      return;
+    }
+    e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (err) {}   // stop the browser from starting its own drag or text selection
+    startPx = [e.clientX, e.clientY];
+    live = { t: kind, k: "r", p: [p, p] };
+    liveLayer = L.polygon(rectPts(p, p), { color: "#fff", weight: 2, dashArray: "6 5", fillColor: COL[kind], fillOpacity: 0.45, interactive: false }).addTo(map);
   });
   el.addEventListener("pointermove", function (e) {
     if (!live) return;
-    var p = evLatLng(e), last = live.p[live.p.length - 1];
-    if (map.distance(last, p) * FT < 2) return;
-    live.p.push(p); liveLayer.setLatLngs(live.p);
+    live.p = [live.p[0], evLatLng(e)]; liveLayer.setLatLngs(rectPts(live.p[0], live.p[1]));
   });
-  function endStroke() {
+  function endStroke(e) {
     pointers = Math.max(0, pointers - 1);
     if (!live) return;
     if (liveLayer) { liveLayer.remove(); liveLayer = null; }
-    shapes.push(live); live = null; render(); stats();
-    setHint(kind === "c" ? "Nice. Keep painting, or pick Salt or Pile snow." : "", "");
+    var big = startPx && e && (Math.abs(e.clientX - startPx[0]) > 8 && Math.abs(e.clientY - startPx[1]) > 8);
+    var done = live; live = null;
+    if (!big) { setHint("Press and drag to draw a box. A quick tap is too small."); return; }
+    shapes.push(done); render(); stats();
+    setHint(kind === "c" ? "Added. Draw more boxes, or pick Salt or Pile snow. Use Erase to remove one." : "");
   }
   window.addEventListener("pointerup", endStroke); window.addEventListener("pointercancel", endStroke);
+  el.addEventListener("dragstart", function (e) { e.preventDefault(); });
+  el.addEventListener("selectstart", function (e) { if (canPaint()) e.preventDefault(); });
   map.on("zoomend", function () { render(); syncMode(); });
 
   function press(sel, attr, val) {
     document.querySelectorAll(sel).forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute(attr) === val); });
   }
-  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { kind = b.dataset.kind; moving = false; press("[data-kind]", "data-kind", kind); syncMode(); }; });
+  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { kind = b.dataset.kind; moving = false; erasing = false; press("[data-kind]", "data-kind", kind); syncMode(); }; });
   document.querySelectorAll("[data-type]").forEach(function (b) { b.onclick = function () { type = b.dataset.type; press("[data-type]", "data-type", type); stats(); }; });
   $("move").onclick = function () { moving = !moving; syncMode(); };
-  $("undo").onclick = function () { shapes.pop(); render(); stats(); };
+  $("eraser").onclick = function () { erasing = !erasing; moving = false; press("[data-kind]", "data-kind", erasing ? "" : kind); syncMode(); };
+  $("undo").onclick = function () { shapes.pop(); render(); stats(); setHint(); };
   $("erase").onclick = function () { shapes = []; render(); stats(); };
   $("suggest").onclick = function () { shapes = JSON.parse(JSON.stringify(preset)); render(); stats(); };
 
@@ -151,7 +178,7 @@
     geocode(q).then(function (p) {
       $("go").disabled = false;
       if (!p) { m.textContent = "We could not find that address. Add the city and state, or zoom the map to your property."; m.className = "hint err"; return; }
-      showPlace(p); m.textContent = "Found it. Now paint over what you need cleared."; m.className = "hint ok";
+      showPlace(p); m.textContent = "Found it. Now drag a box over what you need cleared."; m.className = "hint ok";
     }).catch(function () {
       $("go").disabled = false; m.textContent = "Address search is not responding. Zoom the map to your property, or text us at " + CFG.phone + "."; m.className = "hint err";
     });
@@ -196,8 +223,8 @@
       shapes = d.s; preset = JSON.parse(JSON.stringify(d.s));
       if (d.s.length) {
         $("title").textContent = "Your snow removal plan" + (d.name ? " for " + d.name : "");
-        $("lead").textContent = "We already marked our best guess on your property. If it looks right, just send it. To change it, paint over the photo.";
-        window.__presetHint = "Blue = we clear it. Yellow = salt. Red = snow pile. Paint to add more, or press Erase all to start over.";
+        $("lead").textContent = "We already marked our best guess on your property. If it looks right, just send it. To change it, draw a new box or erase one.";
+        window.__presetHint = "Blue = we clear it. Yellow = salt. Red = snow pile. Drag to add a box, or use Erase to remove one.";
         $("suggest").hidden = false; $("searchPanel").hidden = true; $("how").hidden = true;
       }
     }

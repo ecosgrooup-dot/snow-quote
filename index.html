@@ -33,7 +33,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .sep{width:1px;align-self:stretch;background:var(--line)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
 @media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
-#map{touch-action:none;height:min(62vh,560px);min-height:340px;border-radius:8px;background:#22303c;cursor:crosshair}
+#map{touch-action:none;user-select:none;-webkit-user-select:none;height:min(62vh,560px);min-height:340px;border-radius:8px;background:#22303c;cursor:crosshair}
 .hint{font-size:.9rem;color:var(--muted);min-height:1.3em}
 .hint.ok{color:var(--ok);font-weight:600}.hint.err{color:var(--err);font-weight:600}
 dl{display:grid;grid-template-columns:1fr auto;gap:5px 12px;margin:0;font-variant-numeric:tabular-nums}
@@ -55,6 +55,15 @@ textarea{font:inherit;font-size:.8rem;width:100%;min-height:110px;border:1px sol
 @media (prefers-reduced-motion:reduce){.flake{animation:none;top:10px}}
 .pay{display:flex;gap:8px;align-items:center;font-size:.86rem;font-weight:600;border-top:1px solid var(--line);padding-top:10px}
 .pay i{font-style:normal;border:1px solid var(--line);border-radius:5px;padding:2px 7px;font-size:.75rem;color:var(--muted)}
+.promise{margin-bottom:26px}.promise h2{margin-bottom:8px}
+.promise ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.promise ul{grid-template-columns:minmax(0,1fr)}}
+.promise li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--muted)}
+.promise b{color:var(--fg)}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden}
+#snow span{position:absolute;top:-20px;color:#8fbdf0;opacity:.7;animation:snowfall linear infinite;text-shadow:0 0 2px rgba(255,255,255,.9)}
+@keyframes snowfall{to{transform:translate(30px,105vh)}}
+@media (prefers-reduced-motion:reduce){#snow{display:none}}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
@@ -65,12 +74,12 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <main class="in">
   <div>
     <h1 id="title">Get your FREE snow removal estimate</h1>
-    <p class="sub" id="lead">Type your address, paint what you need cleared on the photo, and see your price right away. No visit, no phone tag.</p>
+    <p class="sub" id="lead">Type your address, mark what you need cleared on the photo, and see your price right away. No visit, no phone tag.</p>
   </div>
 
   <ol class="how" id="how" aria-label="How it works">
     <li><span class="num">1</span><div><b>Type your address</b><span>We show your property from above.</span></div></li>
-    <li><span class="num">2</span><div><b>Paint with your finger</b><span>Blue to clear, yellow for salt, red for the snow pile.</span></div></li>
+    <li><span class="num">2</span><div><b>Drag a box over each area</b><span>Blue to clear, yellow for salt, red for the snow pile.</span></div></li>
     <li><span class="num">3</span><div><b>See your price and send</b><span>We reply the same day. You only meet us to sign.</span></div></li>
   </ol>
 
@@ -85,16 +94,18 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 
   <div class="grid">
     <section class="panel">
-      <h2>2 · Pick a color and paint on the photo</h2>
+      <h2>2 · Pick a color and drag a box on the photo</h2>
       <div class="row">
         <button data-kind="c" aria-pressed="true"><span class="sw" style="background:var(--clear)"></span>Clear snow</button>
         <button data-kind="s" aria-pressed="false"><span class="sw" style="background:var(--salt)"></span>Salt here</button>
         <button data-kind="p" aria-pressed="false"><span class="sw" style="background:var(--pile)"></span>Pile snow here</button>
+        <span class="sep"></span>
+        <button id="eraser" aria-pressed="false">Erase</button>
+        <button id="move" aria-pressed="false">Move map</button>
       </div>
       <div id="map" aria-label="Satellite map of your property"></div>
       <div class="hint" id="hint">Type your address above to see your property.</div>
       <div class="row">
-        <button id="move" aria-pressed="false">Move map</button>
         <button id="undo">Undo</button>
         <button id="erase">Erase all</button>
         <button id="suggest" hidden>Back to our suggestion</button>
@@ -116,7 +127,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
           <dt>Or per visit, no contract</dt><dd id="pVisit">—</dd>
           <dt>Salt / ice melt</dt><dd id="pSalt">not selected</dd>
         </dl>
-        <div class="pay"><span>Pay monthly or in full. Credit and debit cards accepted.</span></div>
+        <div class="pay"><span>Pay monthly or in full with Zelle, Stripe, or any credit or debit card.</span></div>
         <p class="note">Every snowfall of 2 inches or more, up to 20 visits per season. Salt is optional and always billed separately. This is an estimate from the satellite view; your final price is confirmed in a simple written agreement.</p>
       </section>
 
@@ -133,13 +144,28 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
     </div>
   </div>
 </main>
-<footer>MN Snow Removal, a service of Ecos Group LLC · 3544 Spain Pl, Minneapolis, MN 55418 · (612) 564-5857 · ecosgrooup@gmail.com</footer>
+<section class="in promise" aria-label="Our promise">
+  <h2>Why we quote this way</h2>
+  <ul>
+    <li><b>Easy.</b> Your quote in minutes, from your phone or computer, with no visit.</li>
+    <li><b>Clear.</b> You mark exactly what you want on your own property, so there are no misunderstandings.</li>
+    <li><b>In writing.</b> When we meet to sign, every detail you marked goes into the agreement.</li>
+    <li><b>Our goal.</b> To be the best service experience you have had, and to do the job right every snowfall.</li>
+  </ul>
+</section>
+<footer>MN Snow Removal, a service of Ecos Group LLC · Minneapolis, MN · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
+<div id="snow" aria-hidden="true"></div>
 <script>
-(function(){var t=document.querySelector(".top");for(var i=0;i<18;i++){var f=document.createElement("span");f.className="flake";f.textContent="\u2744";f.setAttribute("aria-hidden","true");f.style.left=(i*5.6+Math.random()*4)+"%";f.style.animationDuration=(5+Math.random()*6)+"s";f.style.animationDelay=(-Math.random()*8)+"s";f.style.fontSize=(9+Math.random()*9)+"px";t.appendChild(f);}})();
+(function(){
+  var t=document.querySelector(".top"),i,f;
+  for(i=0;i<18;i++){f=document.createElement("span");f.className="flake";f.textContent="\u2744";f.setAttribute("aria-hidden","true");f.style.left=(i*5.6+Math.random()*4)+"%";f.style.animationDuration=(5+Math.random()*6)+"s";f.style.animationDelay=(-Math.random()*8)+"s";f.style.fontSize=(9+Math.random()*9)+"px";t.appendChild(f);}
+  var s=document.getElementById("snow");
+  for(i=0;i<34;i++){f=document.createElement("span");f.textContent=i%3?"\u2022":"\u2744";f.style.left=(Math.random()*100)+"%";f.style.fontSize=(i%3?8+Math.random()*8:10+Math.random()*10)+"px";f.style.animationDuration=(9+Math.random()*10)+"s";f.style.animationDelay=(-Math.random()*18)+"s";s.appendChild(f);}
+})();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=7"></script>
-<script src="app.js?v=7"></script>
+<script src="config.js?v=8"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
