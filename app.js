@@ -2,17 +2,16 @@
   "use strict";
   var CFG = window.SNOW_CONFIG, $ = function (id) { return document.getElementById(id); };
   var COL = { c: "#1e88ff", s: "#f2b600", p: "#e5392f" };
-  var kind = "c", type = "home";
-  var shapes = [], draft = [], preset = [], place = null, clientName = "";
-  var NAME = { c: "what to clear", s: "where you want salt", p: "where to pile the snow" };
-  function baseHint() { return "Tap the corners of " + NAME[kind] + " on the map. For a sidewalk, tap its start and its end. Then press Done."; }
+  var NAME = { c: "everything you want cleared", s: "where you want salt", p: "where the snow can be piled" };
+  var BRUSH_FT = 7, FT = 3.28084;
+  var kind = "c", type = "home", moving = false;
+  var shapes = [], preset = [], place = null, clientName = "";
 
   // ---------- map ----------
   var map = L.map("map", { zoomControl: true, maxZoom: 21, doubleClickZoom: false }).setView([CFG.start.lat, CFG.start.lng], CFG.start.zoom);
   if (CFG.mapboxToken) {
     L.tileLayer("https://api.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}@2x.jpg90?access_token=" + CFG.mapboxToken, {
-      maxZoom: 21, maxNativeZoom: 20, tileSize: 256,
-      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © Maxar'
+      maxZoom: 21, maxNativeZoom: 20, tileSize: 256, attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © Maxar'
     }).addTo(map);
   } else {
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
@@ -26,71 +25,89 @@
     bounds: [[44.47, -94.02], [45.42, -92.73]], attribution: "Imagery: MnGeo, Metropolitan Council, Hennepin County" }).addTo(map);
   L.tileLayer.wms(WMS, { layers: "hen22", format: "image/jpeg", version: "1.1.1", maxZoom: 21, minZoom: 15,
     bounds: [[44.80, -93.74], [45.23, -93.225]] }).addTo(map);
-  var layer = L.layerGroup().addTo(map), draftLayer = L.layerGroup().addTo(map), pin = null;
+  var layer = L.layerGroup().addTo(map), pin = null;
 
   // ---------- geometry ----------
-  var FT = 3.28084;
-  function polyAreaSqFt(pts) {
-    if (pts.length < 3) return 0;
-    var R = 6378137, lat0 = pts[0][0] * Math.PI / 180, a = 0, xy = pts.map(function (p) {
-      return [R * (p[1] * Math.PI / 180) * Math.cos(lat0), R * (p[0] * Math.PI / 180)];
-    });
-    for (var i = 0; i < xy.length; i++) { var q = xy[i], n = xy[(i + 1) % xy.length]; a += q[0] * n[1] - n[0] * q[1]; }
-    return Math.abs(a) / 2 * FT * FT;
-  }
-  function lineFt(pts) {
-    var d = 0; for (var i = 1; i < pts.length; i++) d += map.distance(pts[i - 1], pts[i]);
-    return d * FT;
-  }
+  // Painted area = union of everything of one kind, measured by drawing it on a hidden canvas (so overlaps count once).
   function rectPts(a, b) { return [[a[0], a[1]], [a[0], b[1]], [b[0], b[1]], [b[0], a[1]]]; }
-  function area(s) {
-    if (s.k === "l") return lineFt(s.p) * CFG.sidewalkFt;
-    if (s.k === "r") return polyAreaSqFt(rectPts(s.p[0], s.p[1]));
-    return polyAreaSqFt(s.p);
+  function sum(t) {
+    var list = shapes.filter(function (s) { return s.t === t; }); if (!list.length) return 0;
+    var lat0 = list[0].p[0][0], R = 6378137, k = Math.PI / 180, cos = Math.cos(lat0 * k);
+    function xy(p) { return [R * p[1] * k * cos * FT, -R * p[0] * k * FT]; }
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    list.forEach(function (s) { s.p.forEach(function (p) { var q = xy(p); minX = Math.min(minX, q[0]); maxX = Math.max(maxX, q[0]); minY = Math.min(minY, q[1]); maxY = Math.max(maxY, q[1]); }); });
+    var pad = BRUSH_FT, w = maxX - minX + pad * 2, h = maxY - minY + pad * 2, sc = Math.min(2, 1400 / Math.max(w, h));
+    var c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w * sc)); c.height = Math.max(1, Math.ceil(h * sc));
+    var g = c.getContext("2d"); g.lineCap = "round"; g.lineJoin = "round"; g.fillStyle = g.strokeStyle = "#000";
+    function pt(p) { var q = xy(p); return [(q[0] - minX + pad) * sc, (q[1] - minY + pad) * sc]; }
+    list.forEach(function (s) {
+      var pts = (s.k === "r" ? rectPts(s.p[0], s.p[1]) : s.p).map(pt);
+      g.beginPath(); pts.forEach(function (q, i) { if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); });
+      if (s.k === "r" || s.k === "p") { g.closePath(); g.fill(); }
+      else { g.lineWidth = (s.k === "b" ? BRUSH_FT : CFG.sidewalkFt) * sc; if (pts.length === 1) g.lineTo(pts[0][0] + 0.01, pts[0][1]); g.stroke(); }
+    });
+    var d = g.getImageData(0, 0, c.width, c.height).data, nPx = 0;
+    for (var i = 3; i < d.length; i += 4) if (d[i] > 127) nPx++;
+    return nPx / (sc * sc);
   }
-  function sum(t) { return shapes.filter(function (s) { return s.t === t; }).reduce(function (a, s) { return a + area(s); }, 0); }
 
-  // ---------- drawing ----------
-  function toLayer(s, opts) {
-    var o = Object.assign({ color: COL[s.t], weight: 3, fillColor: COL[s.t], fillOpacity: 0.4 }, opts || {});
-    if (s.k === "l") return L.polyline(s.p, Object.assign({}, o, { weight: 9, opacity: 0.85 }));
+  // ---------- painting ----------
+  function ftToPx(ft) { var c = map.getCenter(); return ft / FT / (40075016.686 * Math.cos(c.lat * Math.PI / 180) / Math.pow(2, map.getZoom() + 8)); }
+  function toLayer(s) {
+    var o = { color: COL[s.t], weight: 3, fillColor: COL[s.t], fillOpacity: 0.45, interactive: false };
+    if (s.k === "b") return L.polyline(s.p.length > 1 ? s.p : [s.p[0], s.p[0]], Object.assign({}, o, { weight: Math.max(6, ftToPx(BRUSH_FT)), opacity: 0.6, lineCap: "round", lineJoin: "round" }));
+    if (s.k === "l") return L.polyline(s.p, Object.assign({}, o, { weight: Math.max(6, ftToPx(CFG.sidewalkFt)), opacity: 0.6 }));
     if (s.k === "r") return L.polygon(rectPts(s.p[0], s.p[1]), o);
     return L.polygon(s.p, o);
   }
-  function render() {
-    layer.clearLayers(); draftLayer.clearLayers();
-    shapes.forEach(function (s) { toLayer(s).addTo(layer); });
-    if (draft.length) {
-      if (draft.length > 1) toLayer({ t: kind, k: draft.length > 2 ? "p" : "l", p: draft }, { dashArray: "6 6", fillOpacity: 0.25 }).addTo(draftLayer);
-      draft.forEach(function (p, i) { L.circleMarker(p, { radius: i === 0 && draft.length > 2 ? 9 : 6, color: "#fff", fillColor: COL[kind], fillOpacity: 1, weight: 2, interactive: false }).addTo(draftLayer); });
-    }
-    $("finish").hidden = draft.length < 2;
+  var live = null, liveLayer = null, pointers = 0;
+  function render() { layer.clearLayers(); shapes.forEach(function (s) { toLayer(s).addTo(layer); }); }
+  function canPaint() { return !moving && map.getZoom() >= 17; }
+  function baseHint() {
+    if (map.getZoom() < 17) return "Type your address above to see your property.";
+    return moving ? "Move the map with your finger. Press Paint when you are ready." : "Paint with your finger (or mouse) over " + NAME[kind] + ".";
   }
-  // Two points make a sidewalk line; three or more make an area.
-  function commit() {
-    if (draft.length === 2) shapes.push({ t: kind, k: "l", p: draft });
-    else if (draft.length >= 3) shapes.push({ t: kind, k: "p", p: draft });
-    draft = []; $("hint").textContent = baseHint(); $("hint").className = "hint"; render(); stats();
+  function setHint(t, cls) { $("hint").textContent = t || baseHint(); $("hint").className = "hint" + (cls ? " " + cls : ""); }
+  function syncMode() {
+    if (canPaint()) map.dragging.disable(); else map.dragging.enable();
+    $("map").style.cursor = canPaint() ? "crosshair" : "grab";
+    $("move").setAttribute("aria-pressed", moving); $("move").textContent = moving ? "Paint" : "Move map";
+    setHint();
   }
-  map.on("click", function (e) {
-    var p = [+e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6)];
-    if (map.getZoom() < 17) { $("hint").textContent = "Type your address first, or zoom in to your property."; $("hint").className = "hint err"; return; }
-    // Tapping the first corner again closes the shape.
-    if (draft.length >= 3 && map.latLngToContainerPoint(draft[0]).distanceTo(map.latLngToContainerPoint(p)) < 18) { commit(); return; }
-    draft.push(p);
-    $("hint").textContent = draft.length === 1 ? "Good. Tap the next corner." : draft.length === 2 ? "Press Done for a sidewalk, or keep tapping corners for an area." : "Keep tapping corners. Press Done, or tap the first corner again, to close it.";
-    $("hint").className = "hint"; render();
+  function evLatLng(e) { var ll = map.mouseEventToLatLng(e); return [+ll.lat.toFixed(6), +ll.lng.toFixed(6)]; }
+  var el = $("map");
+  el.addEventListener("pointerdown", function (e) {
+    if (e.target.closest(".leaflet-control")) return;
+    pointers++;
+    if (pointers > 1) { if (liveLayer) { liveLayer.remove(); liveLayer = null; } live = null; return; }   // second finger: let the map zoom
+    if (!canPaint() || (e.pointerType === "mouse" && e.button !== 0)) return;
+    live = { t: kind, k: "b", p: [evLatLng(e)] }; liveLayer = toLayer(live).addTo(map);
   });
+  el.addEventListener("pointermove", function (e) {
+    if (!live) return;
+    var p = evLatLng(e), last = live.p[live.p.length - 1];
+    if (map.distance(last, p) * FT < 2) return;
+    live.p.push(p); liveLayer.setLatLngs(live.p);
+  });
+  function endStroke() {
+    pointers = Math.max(0, pointers - 1);
+    if (!live) return;
+    if (liveLayer) { liveLayer.remove(); liveLayer = null; }
+    shapes.push(live); live = null; render(); stats();
+    setHint(kind === "c" ? "Nice. Keep painting, or pick Salt or Pile snow." : "", "");
+  }
+  window.addEventListener("pointerup", endStroke); window.addEventListener("pointercancel", endStroke);
+  map.on("zoomend", function () { render(); syncMode(); });
 
   function press(sel, attr, val) {
     document.querySelectorAll(sel).forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute(attr) === val); });
   }
-  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { if (draft.length >= 2) commit(); else draft = []; kind = b.dataset.kind; press("[data-kind]", "data-kind", kind); $("hint").textContent = baseHint(); $("hint").className = "hint"; render(); }; });
+  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { kind = b.dataset.kind; moving = false; press("[data-kind]", "data-kind", kind); syncMode(); }; });
   document.querySelectorAll("[data-type]").forEach(function (b) { b.onclick = function () { type = b.dataset.type; press("[data-type]", "data-type", type); stats(); }; });
-  $("finish").onclick = commit;
-  $("undo").onclick = function () { if (draft.length) draft.pop(); else shapes.pop(); render(); stats(); };
-  $("erase").onclick = function () { shapes = []; draft = []; render(); stats(); };
-  $("suggest").onclick = function () { shapes = JSON.parse(JSON.stringify(preset)); draft = []; render(); stats(); };
+  $("move").onclick = function () { moving = !moving; syncMode(); };
+  $("undo").onclick = function () { shapes.pop(); render(); stats(); };
+  $("erase").onclick = function () { shapes = []; render(); stats(); };
+  $("suggest").onclick = function () { shapes = JSON.parse(JSON.stringify(preset)); render(); stats(); };
 
   // ---------- pricing ----------
   function quote() {
@@ -134,25 +151,37 @@
     geocode(q).then(function (p) {
       $("go").disabled = false;
       if (!p) { m.textContent = "We could not find that address. Add the city and state, or zoom the map to your property."; m.className = "hint err"; return; }
-      showPlace(p); m.textContent = "Found it. Now mark what you need cleared."; m.className = "hint ok";
+      showPlace(p); m.textContent = "Found it. Now paint over what you need cleared."; m.className = "hint ok";
     }).catch(function () {
       $("go").disabled = false; m.textContent = "Address search is not responding. Zoom the map to your property, or text us at " + CFG.phone + "."; m.className = "hint err";
     });
   });
 
   // ---------- share link (also used for quotes we prepare for a client) ----------
+  // Brush strokes are stored as a start point plus small integer steps (millionths of a degree) to keep links short.
+  function packShape(s) {
+    if (s.k !== "b") return [s.t, s.k].concat(s.p.reduce(function (a, p) { return a.concat(p); }, []));
+    var o = [s.t, "b", s.p[0][0], s.p[0][1]];
+    for (var i = 1; i < s.p.length; i++) o.push(Math.round((s.p[i][0] - s.p[i - 1][0]) * 1e6), Math.round((s.p[i][1] - s.p[i - 1][1]) * 1e6));
+    return o;
+  }
+  function unpackShape(a) {
+    var p = [], i;
+    if (a[1] === "b") {
+      p.push([a[2], a[3]]);
+      for (i = 4; i + 1 < a.length; i += 2) { var l = p[p.length - 1]; p.push([+(l[0] + a[i] / 1e6).toFixed(6), +(l[1] + a[i + 1] / 1e6).toFixed(6)]); }
+    } else for (i = 2; i + 1 < a.length; i += 2) p.push([a[i], a[i + 1]]);
+    return { t: a[0], k: a[1], p: p };
+  }
   function encode() {
     var c = map.getCenter();
-    var d = { v: 1, a: $("address").value.trim(), n: clientName, t: type, c: [+c.lat.toFixed(6), +c.lng.toFixed(6), map.getZoom()], s: shapes.map(function (s) { return [s.t, s.k].concat(s.p.reduce(function (a, p) { return a.concat(p); }, [])); }) };
+    var d = { v: 2, a: $("address").value.trim(), n: clientName, t: type, c: [+c.lat.toFixed(6), +c.lng.toFixed(6), map.getZoom()], s: shapes.map(packShape) };
     return btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   }
   function decode(str) {
     try {
       var d = JSON.parse(decodeURIComponent(escape(atob(str.replace(/-/g, "+").replace(/_/g, "/")))));
-      var sh = (d.s || []).filter(function (a) { return Array.isArray(a) && a.length >= 6; }).map(function (a) {
-        var p = []; for (var i = 2; i + 1 < a.length; i += 2) p.push([a[i], a[i + 1]]);
-        return { t: a[0], k: a[1], p: p };
-      });
+      var sh = (d.s || []).filter(function (a) { return Array.isArray(a) && a.length >= 4 && COL[a[0]]; }).map(unpackShape);
       return { a: d.a || "", name: d.n || "", t: d.t === "business" ? "business" : "home", c: d.c, s: sh };
     } catch (e) { return null; }
   }
@@ -167,8 +196,8 @@
       shapes = d.s; preset = JSON.parse(JSON.stringify(d.s));
       if (d.s.length) {
         $("title").textContent = "Your snow removal plan" + (d.name ? " for " + d.name : "");
-        $("lead").textContent = "We already marked our best guess on your property. If it looks right, just send it. To change it, draw your own.";
-        $("hint").textContent = "Blue = we clear it. Yellow = salt. Red = where the snow gets piled. Add or change anything.";
+        $("lead").textContent = "We already marked our best guess on your property. If it looks right, just send it. To change it, paint over the photo.";
+        window.__presetHint = "Blue = we clear it. Yellow = salt. Red = snow pile. Paint to add more, or press Erase all to start over.";
         $("suggest").hidden = false; $("searchPanel").hidden = true;
       }
     }
@@ -215,5 +244,6 @@
 
   // expose for building client links from the console
   window.snowQuote = { link: linkFor, setName: function (name) { clientName = String(name || ""); return linkFor(); } };
-  render(); stats();
+  render(); stats(); syncMode();
+  if (window.__presetHint) setHint(window.__presetHint);
 })();

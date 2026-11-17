@@ -33,7 +33,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .sep{width:1px;align-self:stretch;background:var(--line)}
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
 @media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
-#map{height:min(62vh,560px);min-height:340px;border-radius:8px;background:#22303c;cursor:crosshair}
+#map{touch-action:none;height:min(62vh,560px);min-height:340px;border-radius:8px;background:#22303c;cursor:crosshair}
 .hint{font-size:.9rem;color:var(--muted);min-height:1.3em}
 .hint.ok{color:var(--ok);font-weight:600}.hint.err{color:var(--err);font-weight:600}
 dl{display:grid;grid-template-columns:1fr auto;gap:5px 12px;margin:0;font-variant-numeric:tabular-nums}
@@ -68,16 +68,16 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 
   <div class="grid">
     <section class="panel">
-      <h2>2 · Pick one, then tap on the map</h2>
+      <h2>2 · Pick a color and paint on the photo</h2>
       <div class="row">
         <button data-kind="c" aria-pressed="true"><span class="sw" style="background:var(--clear)"></span>Clear snow</button>
         <button data-kind="s" aria-pressed="false"><span class="sw" style="background:var(--salt)"></span>Salt here</button>
         <button data-kind="p" aria-pressed="false"><span class="sw" style="background:var(--pile)"></span>Pile snow here</button>
       </div>
       <div id="map" aria-label="Satellite map of your property"></div>
-      <div class="hint" id="hint">Tap the corners of what to clear on the map. For a sidewalk, tap its start and its end. Then press Done.</div>
+      <div class="hint" id="hint">Type your address above to see your property.</div>
       <div class="row">
-        <button id="finish" class="primary" hidden>Done</button>
+        <button id="move" aria-pressed="false">Move map</button>
         <button id="undo">Undo</button>
         <button id="erase">Erase all</button>
         <button id="suggest" hidden>Back to our suggestion</button>
@@ -118,7 +118,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <footer>MN Snow Removal, a service of Ecos Group LLC · 3544 Spain Pl, Minneapolis, MN 55418 · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>
