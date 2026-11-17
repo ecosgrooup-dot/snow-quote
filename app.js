@@ -326,19 +326,42 @@
       });
   };
 
-  // Real forecast from the National Weather Service: show a badge only when snow is actually expected.
+  // Real weather from the National Weather Service: current temperature, the next few periods,
+  // and a banner in the header only when snow is actually expected.
   (function () {
-    var box = $("wx"); if (!box || !window.fetch) return;
+    if (!window.fetch) return;
+    var isSnow = function (t) { return /snow|flurr|wintry|blizzard/i.test(t || ""); };
     fetch("https://api.weather.gov/points/" + CFG.start.lat + "," + CFG.start.lng)
       .then(function (r) { return r.json(); })
-      .then(function (j) { return fetch(j.properties.forecast); })
-      .then(function (r) { return r.json(); })
       .then(function (j) {
-        var p = (j.properties.periods || []).filter(function (x) { return /snow|flurr|wintry|blizzard/i.test(x.shortForecast || ""); })[0];
-        if (!p) return;
-        box.textContent = "Snow in the Minneapolis forecast: " + p.name + ". " + p.shortForecast + ".";
-        box.hidden = false;
+        return Promise.all([fetch(j.properties.forecast).then(function (r) { return r.json(); }),
+          fetch(j.properties.forecastHourly).then(function (r) { return r.json(); }).catch(function () { return null; })]);
+      })
+      .then(function (res) {
+        var periods = (res[0].properties.periods || []), now = res[1] && res[1].properties.periods && res[1].properties.periods[0];
+        var first = now || periods[0]; if (!first) return;
+        $("wxTemp").textContent = first.temperature + "\u00b0" + (first.temperatureUnit || "F");
+        $("wxText").textContent = "Now: " + first.shortForecast;
+        var ul = $("wxDays"); ul.textContent = "";
+        periods.slice(0, 4).forEach(function (p) {
+          var li = document.createElement("li"), n = document.createElement("b"), t = document.createElement("span"), d = document.createElement("span");
+          n.textContent = p.name; t.className = "t"; t.textContent = p.temperature + "\u00b0"; d.className = "s"; d.textContent = p.shortForecast;
+          if (isSnow(p.shortForecast)) li.className = "snowy";
+          li.appendChild(n); li.appendChild(t); li.appendChild(d); ul.appendChild(li);
+        });
+        $("wxcard").hidden = false;
+        var snow = periods.filter(function (p) { return isSnow(p.shortForecast); })[0];
+        if (snow) { $("wx").textContent = "Snow in the Minneapolis forecast: " + snow.name + ". " + snow.shortForecast + "."; $("wx").hidden = false; }
       }).catch(function () {});
+  })();
+
+  // Contact shortcuts: WhatsApp QR code (for people on a computer) and direct links.
+  (function () {
+    var digits = CFG.phone.replace(/\D/g, ""), wa = "https://wa.me/1" + digits + "?text=" + encodeURIComponent("Hi! I would like a snow removal quote.");
+    $("waLink").href = wa;
+    $("mailLink").href = "mailto:" + CFG.email + "?subject=" + encodeURIComponent("Snow removal quote");
+    try { var q = qrcode(0, "M"); q.addData(wa); q.make(); $("qr").innerHTML = q.createSvgTag({ cellSize: 4, margin: 1, scalable: true }); }
+    catch (e) { $("qr").hidden = true; }
   })();
 
   // expose for building client links from the console

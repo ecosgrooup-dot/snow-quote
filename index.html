@@ -121,6 +121,40 @@ button.primary{background:linear-gradient(180deg,#1479e0,#0b5cb5);border-color:#
 #winter{border-color:var(--accent);color:var(--accent)}
 #winter[aria-pressed=true]{background:var(--accent);color:#fff}
 body.storm #snow span{opacity:.95;color:#cfe4fb}
+.extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:880px){.extras{order:4;grid-template-columns:minmax(0,1fr)}}
+.wxnow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+#wxTemp{font-size:2rem;font-weight:700;color:var(--brand);font-variant-numeric:tabular-nums}
+#wxText{font-weight:600}
+.wxdays{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.88rem}
+.wxdays li{display:grid;grid-template-columns:minmax(0,7.5em) 3.2em minmax(0,1fr);gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.wxdays b{font-weight:600}.wxdays .t{font-variant-numeric:tabular-nums;color:var(--brand);font-weight:600}.wxdays .s{color:var(--muted)}
+.wxdays li.snowy{background:#eef6ff;border-radius:6px;padding:5px 6px}.wxdays li.snowy .s{color:var(--accent);font-weight:600}
+.qrrow{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.qr{flex:none;width:132px;height:132px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px}
+.qr svg{width:100%;height:100%;display:block}
+.ways{display:flex;flex-direction:column;gap:7px;min-width:0;flex:1}
+.way{display:block;text-align:center;font-weight:600;text-decoration:none;color:var(--fg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:#f7f9fc;transition:transform .12s,border-color .15s}
+.way:hover{transform:translateY(-1px);border-color:var(--accent)}
+#waLink{background:#12804a;border-color:#12804a;color:#fff}
+.hero .in{padding-bottom:78px}
+.plow{position:absolute;bottom:22px;left:0;width:118px;z-index:2;pointer-events:none;animation:drive 22s linear infinite;will-change:transform}
+.plow svg{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+@keyframes drive{from{transform:translateX(-140px)}to{transform:translateX(calc(100vw + 20px))}}
+.plow .bot{animation:bob .5s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-1.500px)}}
+.plow .wheel{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.plow .lamp{animation:blink 1s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:.25}}
+.plow .eye{animation:wink 5s infinite}
+@keyframes wink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.plow .eye{transform-box:fill-box;transform-origin:center}
+.plow .pf{animation:puff 1.100s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.plow .p2{animation-delay:.25s}.plow .p3{animation-delay:.5s}.plow .p4{animation-delay:.75s}
+@keyframes puff{0%{opacity:0;transform:translate(-6px,6px) scale(.5)}30%{opacity:1}100%{opacity:0;transform:translate(16px,-18px) scale(1.300)}}
+@media (prefers-reduced-motion:reduce){.plow{left:auto;right:6%;animation:none}}
+@media (max-width:560px){.plow{width:88px;bottom:18px}.hero .in{padding-bottom:66px}}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
@@ -128,6 +162,29 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <body>
 <div class="band">
 <div class="top"><div class="in"><b>MN Snow Removal</b><a href="tel:+16125645857">Call or text (612) 564-5857</a></div></div>
+<div class="plow" aria-hidden="true">
+<svg viewBox="0 0 150 80" xmlns="http://www.w3.org/2000/svg">
+  <g class="puffs" fill="#fff">
+    <circle class="pf p1" cx="138" cy="60" r="4"/><circle class="pf p2" cx="142" cy="52" r="3"/><circle class="pf p3" cx="134" cy="48" r="2.5"/><circle class="pf p4" cx="146" cy="62" r="2.5"/>
+  </g>
+  <g class="bot">
+    <path d="M118 34 q16 14 6 38 l-10 0 q8 -20 -4 -36 z" fill="#ffc94a" stroke="#0a2f5a" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="96" y="50" width="20" height="6" rx="3" fill="#0a2f5a"/>
+    <rect x="34" y="30" width="66" height="34" rx="9" fill="#f4f8fc" stroke="#0a2f5a" stroke-width="2.5"/>
+    <rect x="42" y="40" width="26" height="14" rx="4" fill="#1e88ff"/>
+    <path d="M47 47 h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="80" cy="47" r="4" fill="#ffc94a" stroke="#0a2f5a" stroke-width="2"/>
+    <rect x="50" y="8" width="38" height="24" rx="8" fill="#f4f8fc" stroke="#0a2f5a" stroke-width="2.5"/>
+    <rect x="56" y="14" width="26" height="11" rx="5.500" fill="#0a2f5a"/>
+    <circle class="eye" cx="64" cy="19.500" r="2.600" fill="#7fd0ff"/><circle class="eye" cx="75" cy="19.500" r="2.600" fill="#7fd0ff"/>
+    <path d="M69 8 v-6" stroke="#0a2f5a" stroke-width="2.5" stroke-linecap="round"/>
+    <circle class="lamp" cx="69" cy="2.500" r="3" fill="#ff6b5e"/>
+    <path d="M36 44 h-10 v-10" fill="none" stroke="#0a2f5a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="wheel" style="transform-origin:50px 66px"><circle cx="50" cy="66" r="10" fill="#0a2f5a"/><circle cx="50" cy="66" r="4" fill="#f4f8fc"/><path d="M50 57 v18 M41 66 h18" stroke="#f4f8fc" stroke-width="1.500"/></g>
+    <g class="wheel" style="transform-origin:86px 66px"><circle cx="86" cy="66" r="10" fill="#0a2f5a"/><circle cx="86" cy="66" r="4" fill="#f4f8fc"/><path d="M86 57 v18 M77 66 h18" stroke="#f4f8fc" stroke-width="1.500"/></g>
+  </g>
+</svg>
+</div>
 <section class="hero"><div class="in">
   <div class="wx" id="wx" hidden></div>
   <h1 id="title">Get your <em>FREE</em> snow removal estimate</h1>
@@ -174,6 +231,26 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
       <p>We respect your time and want working with us to be easy and comfortable. It will be a pleasure to serve you.</p>
       <p class="fine">It is an estimate. We confirm every detail with you before any work starts.</p>
     </aside>
+    <div class="extras">
+      <section class="panel wxcard" id="wxcard" hidden aria-label="Minneapolis weather">
+        <h2>Minneapolis weather</h2>
+        <div class="wxnow"><span id="wxTemp"></span><span id="wxText"></span></div>
+        <ul class="wxdays" id="wxDays"></ul>
+        <p class="note">Source: National Weather Service.</p>
+      </section>
+      <section class="panel contact" aria-label="Contact us">
+        <h2>Prefer to message us?</h2>
+        <div class="qrrow">
+          <div class="qr" id="qr" aria-label="QR code to message us on WhatsApp"></div>
+          <div class="ways">
+            <p class="note">Scan with your phone camera to message us on WhatsApp.</p>
+            <a class="way" id="waLink" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="way" id="mailLink">Email us</a>
+            <a class="way" href="tel:+16125645857">Call or text (612) 564-5857</a>
+          </div>
+        </div>
+      </section>
+    </div>
     </div>
 
     <div class="side">
@@ -230,7 +307,8 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=24"></script>
-<script src="app.js?v=24"></script>
+<script src="vendor/qrcode.js"></script>
+<script src="config.js?v=26"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>
