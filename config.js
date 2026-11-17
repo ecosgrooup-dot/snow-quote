@@ -12,11 +12,13 @@ window.SNOW_CONFIG = {
   pricing: {
     home: [
       { max: 1200, plan: "Home", season: 700, month: 117, visit: 85 },
-      { max: 2500, plan: "Home, corner lot", season: 1250, month: 210, visit: 125 }
+      { max: 2500, plan: "Home, corner lot", season: 1250, month: 210, visit: 125 },
+      { max: 5000, plan: "Large home", season: 1800, month: 300, visit: 165 }
     ],
     business: [
       { max: 1500, plan: "Entrance + sidewalks", season: 1500, month: 250, visit: 125 },
-      { max: 6000, plan: "Entrance + sidewalks + small lot", season: 3200, month: 535, visit: 250 }
+      { max: 6000, plan: "Entrance + sidewalks + small lot", season: 3200, month: 535, visit: 250 },
+      { max: 12000, plan: "Large lot", season: 5000, month: 835, visit: 400 }
     ]
   },
   // 5% off when the whole season is paid up front; 10% for seniors and neighbors with a disability.
