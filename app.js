@@ -198,7 +198,7 @@
         $("title").textContent = "Your snow removal plan" + (d.name ? " for " + d.name : "");
         $("lead").textContent = "We already marked our best guess on your property. If it looks right, just send it. To change it, paint over the photo.";
         window.__presetHint = "Blue = we clear it. Yellow = salt. Red = snow pile. Paint to add more, or press Erase all to start over.";
-        $("suggest").hidden = false; $("searchPanel").hidden = true;
+        $("suggest").hidden = false; $("searchPanel").hidden = true; $("how").hidden = true;
       }
     }
   }

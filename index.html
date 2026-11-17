@@ -44,6 +44,17 @@ label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mu
 .seg{display:flex;gap:8px}.seg button{flex:1;justify-content:center}
 .side{display:flex;flex-direction:column;gap:16px;min-width:0}
 textarea{font:inherit;font-size:.8rem;width:100%;min-height:110px;border:1px solid var(--line);border-radius:7px;padding:8px}
+.how{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:700px){.how{grid-template-columns:minmax(0,1fr)}}
+.how li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.how .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.how b{display:block}.how span{color:var(--muted);font-size:.86rem}
+.top{position:relative;overflow:hidden}.top .in{position:relative;z-index:1}
+.flake{position:absolute;top:-12px;color:#fff;opacity:.55;font-size:12px;pointer-events:none;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(90px)}}
+@media (prefers-reduced-motion:reduce){.flake{animation:none;top:10px}}
+.pay{display:flex;gap:8px;align-items:center;font-size:.86rem;font-weight:600;border-top:1px solid var(--line);padding-top:10px}
+.pay i{font-style:normal;border:1px solid var(--line);border-radius:5px;padding:2px 7px;font-size:.75rem;color:var(--muted)}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
@@ -54,8 +65,14 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <main class="in">
   <div>
     <h1 id="title">Get your FREE snow removal estimate</h1>
-    <p class="sub" id="lead">Type your address, mark what you need cleared on the map, and see your price right away. No visit, no phone tag.</p>
+    <p class="sub" id="lead">Type your address, paint what you need cleared on the photo, and see your price right away. No visit, no phone tag.</p>
   </div>
+
+  <ol class="how" id="how" aria-label="How it works">
+    <li><span class="num">1</span><div><b>Type your address</b><span>We show your property from above.</span></div></li>
+    <li><span class="num">2</span><div><b>Paint with your finger</b><span>Blue to clear, yellow for salt, red for the snow pile.</span></div></li>
+    <li><span class="num">3</span><div><b>See your price and send</b><span>We reply the same day. You only meet us to sign.</span></div></li>
+  </ol>
 
   <section class="panel" id="searchPanel">
     <h2>1 · Your address</h2>
@@ -99,6 +116,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
           <dt>Or per visit, no contract</dt><dd id="pVisit">—</dd>
           <dt>Salt / ice melt</dt><dd id="pSalt">not selected</dd>
         </dl>
+        <div class="pay"><span>Pay monthly or in full. Credit and debit cards accepted.</span></div>
         <p class="note">Every snowfall of 2 inches or more, up to 20 visits per season. Salt is optional and always billed separately. This is an estimate from the satellite view; your final price is confirmed in a simple written agreement.</p>
       </section>
 
@@ -117,8 +135,11 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 </main>
 <footer>MN Snow Removal, a service of Ecos Group LLC · 3544 Spain Pl, Minneapolis, MN 55418 · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
+<script>
+(function(){var t=document.querySelector(".top");for(var i=0;i<18;i++){var f=document.createElement("span");f.className="flake";f.textContent="\u2744";f.setAttribute("aria-hidden","true");f.style.left=(i*5.6+Math.random()*4)+"%";f.style.animationDuration=(5+Math.random()*6)+"s";f.style.animationDelay=(-Math.random()*8)+"s";f.style.fontSize=(9+Math.random()*9)+"px";t.appendChild(f);}})();
+</script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="config.js?v=7"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
