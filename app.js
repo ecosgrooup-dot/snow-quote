@@ -134,20 +134,27 @@
       if (i >= 0) { shapes.splice(i, 1); render(); stats(); setHint(shapes.length ? "Removed. Tap another box, or pick a color to keep drawing." : "All clear. Pick a color to draw again."); }
       return;
     }
-    e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (err) {}   // stop the browser from starting its own drag or text selection
+    e.preventDefault(); e.stopPropagation();
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}   // stop the browser from starting its own drag or text selection
     startPx = [e.clientX, e.clientY];
     live = { t: kind, k: "r", p: [p, p] };
     liveLayer = L.polygon(rectPts(p, p), { color: "#fff", weight: 2, dashArray: "6 5", fillColor: COL[kind], fillOpacity: 0.45, interactive: false }).addTo(map);
   });
   el.addEventListener("pointermove", function (e) {
     if (!live) return;
+    e.preventDefault();
     live.p = [live.p[0], evLatLng(e)]; liveLayer.setLatLngs(rectPts(live.p[0], live.p[1]));
   });
   function endStroke(e) {
     pointers = Math.max(0, pointers - 1);
     if (!live) return;
     if (liveLayer) { liveLayer.remove(); liveLayer = null; }
-    var big = startPx && e && (Math.abs(e.clientX - startPx[0]) > 8 && Math.abs(e.clientY - startPx[1]) > 8);
+    // On mobile (touch), accept smaller drags — fingers are less precise than a mouse.
+    // Use || instead of && so a drag that's big enough in EITHER direction counts.
+    var dx = startPx && e ? Math.abs(e.clientX - startPx[0]) : 0;
+    var dy = startPx && e ? Math.abs(e.clientY - startPx[1]) : 0;
+    var thresh = (e && e.pointerType === "touch") ? 5 : 8;
+    var big = startPx && e && (dx > thresh || dy > thresh) && (dx + dy > thresh * 2);
     var done = live; live = null;
     if (!big) { setHint("Press and drag to draw a box. A quick tap is too small."); return; }
     shapes.push(done); render(); stats();
