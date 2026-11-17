@@ -49,43 +49,57 @@ textarea{font:inherit;font-size:.8rem;width:100%;min-height:110px;border:1px sol
 .how li{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
 .how .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
 .how b{display:block}.how span{color:var(--muted);font-size:.86rem}
-.top{position:relative;overflow:hidden}.top .in{position:relative;z-index:1}
+.top .in{position:relative;z-index:1}
 .flake{position:absolute;top:-12px;color:#fff;opacity:.55;font-size:12px;pointer-events:none;animation:fall linear infinite}
-@keyframes fall{to{transform:translateY(90px)}}
+@keyframes fall{to{transform:translateY(340px)}}
 @media (prefers-reduced-motion:reduce){.flake{animation:none;top:10px}}
 .pay{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .payt{font-weight:600;font-size:.9rem}
 .methods{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .methods li{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:.84rem;font-weight:600;background:#f7f9fc}
 .methods svg{width:20px;height:20px;flex:none;color:var(--brand)}
+.band{position:relative;overflow:hidden;background:linear-gradient(180deg,#0b3d73 0%,#11508f 100%);color:#fff}
+.band .top{background:transparent;border-bottom:1px solid rgba(255,255,255,.14)}
+.hero .in{padding-top:20px;padding-bottom:22px;display:flex;flex-direction:column;gap:12px;position:relative;z-index:1}
+.hero h1{font-size:1.9rem;color:#fff}
+.hero .sub{color:#d3e3f5;margin:-6px 0 0;max-width:70ch}
+.searchcard{background:#fff;border-radius:12px;padding:10px;box-shadow:0 6px 20px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:6px}
+.searchcard input{font-size:16px;padding:13px 14px;border-color:#c5d1df}
+.searchcard button{padding:13px 18px;white-space:nowrap}
+.searchcard .hint{padding:0 4px;min-height:0}
+@media (max-width:560px){.search{flex-direction:column}.hero h1{font-size:1.55rem}}
+.band .how li{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.22);padding:8px 10px}
+.band .how b{color:#fff}.band .how span{color:#d3e3f5}
+.band .how .num{background:#fff;color:#0b3d73;width:24px;height:24px;font-size:.85rem}
+main.in{padding-top:16px;padding-bottom:36px;gap:12px}
+.panel{box-shadow:0 1px 3px rgba(16,32,56,.07)}
+#map{border:1px solid #c5d1df}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
 </head>
 <body>
+<div class="band">
 <div class="top"><div class="in"><b>MN Snow Removal</b><a href="tel:+16125645857">Call or text (612) 564-5857</a></div></div>
-
-<main class="in">
-  <div>
-    <h1 id="title">Get your FREE snow removal estimate</h1>
-    <p class="sub" id="lead">Type your address, mark what you need cleared on the photo, and see your price right away. It takes about two minutes.</p>
-  </div>
-
-  <ol class="how" id="how" aria-label="How it works">
-    <li><span class="num">1</span><div><b>Type your address</b><span>We show your property from above.</span></div></li>
-    <li><span class="num">2</span><div><b>Drag a box over each area</b><span>Blue to clear, yellow for salt, red for the snow pile.</span></div></li>
-    <li><span class="num">3</span><div><b>See your price and send</b><span>We reply the same day with your written quote, and we are glad to meet you in person whenever you like.</span></div></li>
-  </ol>
-
-  <section class="panel" id="searchPanel">
-    <h2>1 · Your address</h2>
+<section class="hero"><div class="in">
+  <h1 id="title">Get your FREE snow removal estimate</h1>
+  <p class="sub" id="lead">Type your address, mark what you need cleared on the photo, and see your price right away. It takes about two minutes.</p>
+  <div class="searchcard" id="searchPanel">
     <form class="search" id="searchForm">
-      <input type="text" id="address" autocomplete="street-address" placeholder="123 Main St, Minneapolis, MN" aria-label="Property address">
+      <input type="text" id="address" autocomplete="street-address" placeholder="Your address, for example 123 Main St, Minneapolis" aria-label="Property address">
       <button class="primary" id="go">Show my property</button>
     </form>
-    <div class="hint" id="searchMsg">Homes and small businesses in Minneapolis and nearby cities.</div>
-  </section>
+    <div class="hint" id="searchMsg">Serving homes and businesses in Minneapolis and nearby cities.</div>
+  </div>
+  <ol class="how" id="how" aria-label="How it works">
+    <li><span class="num">1</span><div><b>Type your address</b><span>See your property from above.</span></div></li>
+    <li><span class="num">2</span><div><b>Drag a box over each area</b><span>Blue to clear, yellow for salt, red for the pile.</span></div></li>
+    <li><span class="num">3</span><div><b>See your price and send</b><span>Same-day written quote. Happy to meet in person anytime.</span></div></li>
+  </ol>
+</div></section>
+</div>
 
+<main class="in">
   <div class="grid">
     <section class="panel">
       <h2>2 · Pick a color and drag a box on the photo</h2>
@@ -160,14 +174,14 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <div id="snow" aria-hidden="true"></div>
 <script>
 (function(){
-  var t=document.querySelector(".top"),i,f;
+  var t=document.querySelector(".band"),i,f;
   for(i=0;i<18;i++){f=document.createElement("span");f.className="flake";f.textContent="\u2744";f.setAttribute("aria-hidden","true");f.style.left=(i*5.6+Math.random()*4)+"%";f.style.animationDuration=(5+Math.random()*6)+"s";f.style.animationDelay=(-Math.random()*8)+"s";f.style.fontSize=(9+Math.random()*9)+"px";t.appendChild(f);}
   var s=document.getElementById("snow");
   for(i=0;i<34;i++){f=document.createElement("span");f.textContent=i%3?"\u2022":"\u2744";f.style.left=(Math.random()*100)+"%";f.style.fontSize=(i%3?8+Math.random()*8:10+Math.random()*10)+"px";f.style.animationDuration=(9+Math.random()*10)+"s";f.style.animationDelay=(-Math.random()*18)+"s";s.appendChild(f);}
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="config.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
