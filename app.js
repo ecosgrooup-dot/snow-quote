@@ -145,13 +145,30 @@
   }
   function n(x) { return Math.round(x).toLocaleString("en-US"); }
   function usd(x) { return "$" + n(x); }
+  // Count the price up or down so the change is easy to notice.
+  var shown = { pSeason: null };
+  function setPrice(id, target, text) {
+    var el = $(id), from = shown[id];
+    shown[id] = target;
+    if (target == null || from == null || from === target || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = text; if (target != null && from !== target) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+      return;
+    }
+    var t0 = performance.now();
+    (function step(now) {
+      var k = Math.min(1, (now - t0) / 450), v = from + (target - from) * (1 - Math.pow(1 - k, 3));
+      el.textContent = usd(v);
+      if (k < 1 && shown[id] === target) requestAnimationFrame(step); else if (shown[id] === target) el.textContent = text;
+    })(t0);
+    el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+  }
   function stats() {
     var a = sum("c"), s = sum("s"), q = quote();
     $("aC").textContent = n(a) + " sq ft"; $("aS").textContent = s > 0 ? n(s) + " sq ft" : "none";
     $("pSalt").textContent = s > 0 ? usd(CFG.saltPerApplication) + " per application" : "not selected";
-    if (!q) { $("planName").textContent = "Seasonal plan (Nov 15 – Apr 15)"; $("pSeason").textContent = "—"; $("pMonth").textContent = "—"; $("pVisit").textContent = "—"; }
-    else if (q.custom) { $("planName").textContent = q.plan; $("pSeason").textContent = "Custom"; $("pMonth").textContent = "we will email you"; $("pVisit").textContent = "—"; }
-    else { $("planName").textContent = q.plan + " · season"; $("pSeason").textContent = usd(q.season); $("pMonth").textContent = usd(q.month) + " / month"; $("pVisit").textContent = usd(q.visit); }
+    if (!q) { $("planName").textContent = "Seasonal plan (Nov 15 – Apr 15)"; setPrice("pSeason", null, "—"); $("pMonth").textContent = "—"; $("pVisit").textContent = "—"; }
+    else if (q.custom) { $("planName").textContent = q.plan; setPrice("pSeason", null, "Custom"); $("pMonth").textContent = "we will email you"; $("pVisit").textContent = "—"; }
+    else { $("planName").textContent = q.plan + " · season"; setPrice("pSeason", q.season, usd(q.season)); $("pMonth").textContent = usd(q.month) + " / month"; $("pVisit").textContent = usd(q.visit); }
   }
 
   // ---------- address search ----------
@@ -167,6 +184,7 @@
   }
   function showPlace(p) {
     place = p; map.setView([p.lat, p.lng], 20);
+    $("go").classList.remove("pulse"); $("map").classList.remove("found"); void $("map").offsetWidth; $("map").classList.add("found");
     if (pin) pin.remove();
     pin = L.circleMarker([p.lat, p.lng], { radius: 5, color: "#fff", fillColor: "#0b3d73", fillOpacity: 1, weight: 2 }).addTo(map);
   }
