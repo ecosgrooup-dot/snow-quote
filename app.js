@@ -22,12 +22,13 @@
       maxZoom: 21, maxNativeZoom: 19, attribution: "Imagery © Esri, Maxar, Earthstar Geographics"
     }).addTo(map);
   }
-  // Sharper, newer public imagery for the Twin Cities metro (Hennepin 2022 6-inch over metro 2025 1-foot).
-  L.tileLayer.wms("https://imageserver.gisdata.mn.gov/cgi-bin/wms?", {
-    layers: "met25,hen22", format: "image/jpeg", version: "1.1.1", maxZoom: 21, minZoom: 15,
-    bounds: [[44.47, -94.02], [45.42, -92.73]],
-    attribution: "Imagery: MnGeo, Metropolitan Council, Hennepin County"
-  }).addTo(map);
+  // Newer public imagery for the Twin Cities metro: spring 2025 1-foot everywhere,
+  // with the sharper Hennepin 2022 6-inch on top, kept away from the county edge where it has gaps.
+  var WMS = "https://imageserver.gisdata.mn.gov/cgi-bin/wms?";
+  L.tileLayer.wms(WMS, { layers: "met25", format: "image/jpeg", version: "1.1.1", maxZoom: 21, minZoom: 15,
+    bounds: [[44.47, -94.02], [45.42, -92.73]], attribution: "Imagery: MnGeo, Metropolitan Council, Hennepin County" }).addTo(map);
+  L.tileLayer.wms(WMS, { layers: "hen22", format: "image/jpeg", version: "1.1.1", maxZoom: 21, minZoom: 15,
+    bounds: [[44.80, -93.74], [45.23, -93.225]] }).addTo(map);
   var layer = L.layerGroup().addTo(map), draftLayer = L.layerGroup().addTo(map), pin = null;
 
   // ---------- geometry ----------
@@ -202,11 +203,13 @@
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (r) {
         $("send").disabled = false;
-        if (!r.ok || String(r.j.success) !== "true") throw new Error("rejected");
+        if (!r.ok || String(r.j.success) !== "true") throw new Error((r.j && r.j.message) || "rejected");
         m.textContent = "Sent! We will reply the same day with your written quote."; m.className = "hint ok"; $("out").hidden = true;
       })
-      .catch(function () {
+      .catch(function (err) {
         $("send").disabled = false;
+        if (window.console) console.warn("Quote request not sent:", err && err.message);
+        $("out").title = (err && err.message) || "";
         var t = Object.keys(data).map(function (k) { return k + ": " + data[k]; }).join("\n");
         $("out").value = "MN Snow Removal quote request\n" + t; $("out").hidden = false;
         m.textContent = "We could not send it automatically. Copy the text below and email it to " + CFG.email + " or text it to " + CFG.phone + "."; m.className = "hint err";
