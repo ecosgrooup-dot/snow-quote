@@ -15,8 +15,8 @@ window.SNOW_CONFIG = {
       { max: 2500, plan: "Home, corner lot", season: 1250, month: 210, visit: 110 }
     ],
     business: [
-      { max: 1500, plan: "Entrance + sidewalks", season: 1500, month: 250, visit: 100 },
-      { max: 6000, plan: "Entrance + sidewalks + small lot", season: 3200, month: 535, visit: 200 }
+      { max: 1500, plan: "Entrance + sidewalks", season: 1500, month: 250, visit: 125 },
+      { max: 6000, plan: "Entrance + sidewalks + small lot", season: 3200, month: 535, visit: 250 }
     ]
   },
   saltPerApplication: 45
