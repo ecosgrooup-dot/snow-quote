@@ -242,6 +242,7 @@
       "Area to clear": n(sum("c")) + " sq ft",
       "Salt": sum("s") > 0 ? "yes, " + n(sum("s")) + " sq ft" : "no",
       "Snow pile spot": shapes.some(function (s) { return s.t === "p"; }) ? "marked" : "not marked",
+      "Discount requested": $("disc").checked ? "YES: senior, disability or limited mobility" : "no",
       "Estimate shown": !q ? "nothing drawn" : q.custom ? q.plan + " (custom quote)" : q.plan + ": " + usd(q.season) + " season / " + usd(q.month) + " month / " + usd(q.visit) + " visit",
       "Map": linkFor()
     };
