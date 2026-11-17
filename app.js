@@ -170,6 +170,7 @@
     document.body.classList.toggle("storm", winter); render(); setHint();
   };
   $("eraser").onclick = function () { erasing = !erasing; moving = false; press("[data-kind]", "data-kind", erasing ? "" : kind); syncMode(); };
+  $("disc").addEventListener("change", function () { stats(); });
   $("undo").onclick = function () { shapes.pop(); render(); stats(); setHint(); };
   $("erase").onclick = function () { shapes = []; render(); stats(); };
   $("suggest").onclick = function () { shapes = JSON.parse(JSON.stringify(preset)); render(); stats(); };
@@ -177,9 +178,11 @@
   // ---------- pricing ----------
   function quote() {
     var a = sum("c"); if (a <= 0) return null;
-    var tiers = CFG.pricing[type];
-    for (var i = 0; i < tiers.length; i++) if (a <= tiers[i].max) return tiers[i];
-    return { plan: type === "home" ? "Large property" : "Large lot", custom: true };
+    var tiers = CFG.pricing[type], t = null;
+    for (var i = 0; i < tiers.length; i++) if (a <= tiers[i].max) { t = tiers[i]; break; }
+    if (!t) return { plan: type === "home" ? "Large property" : "Large lot", custom: true };
+    var k = $("disc").checked ? 1 - CFG.helpDiscount : 1, r5 = function (x) { return Math.round(x * k); };
+    return { plan: t.plan, season: r5(t.season), month: r5(t.month), visit: r5(t.visit), prepay: Math.round(t.season * k * (1 - CFG.prepayDiscount)), discounted: k < 1 };
   }
   function n(x) { return Math.round(x).toLocaleString("en-US"); }
   function usd(x) { return "$" + n(x); }
@@ -207,6 +210,8 @@
     if (!q) { $("planName").textContent = "Seasonal plan (Nov 15 – Apr 15)"; setPrice("pSeason", null, "—"); $("pMonth").textContent = "—"; $("pVisit").textContent = "—"; }
     else if (q.custom) { $("planName").textContent = q.plan; setPrice("pSeason", null, "Custom"); $("pMonth").textContent = "we will email you"; $("pVisit").textContent = "—"; }
     else { $("planName").textContent = q.plan + " · season"; setPrice("pSeason", q.season, usd(q.season)); $("pMonth").textContent = usd(q.month) + " / month"; $("pVisit").textContent = usd(q.visit); }
+    $("pPrepay").textContent = q && !q.custom ? usd(q.prepay) : "—";
+    $("discNote").hidden = !(q && q.discounted);
   }
 
   // ---------- address search ----------
@@ -299,7 +304,7 @@
       "Salt": sum("s") > 0 ? "yes, " + n(sum("s")) + " sq ft" : "no",
       "Snow pile spot": shapes.some(function (s) { return s.t === "p"; }) ? "marked" : "not marked",
       "Discount requested": $("disc").checked ? "YES: senior, disability or limited mobility" : "no",
-      "Estimate shown": !q ? "nothing drawn" : q.custom ? q.plan + " (custom quote)" : q.plan + ": " + usd(q.season) + " season / " + usd(q.month) + " month / " + usd(q.visit) + " visit",
+      "Estimate shown": !q ? "nothing drawn" : q.custom ? q.plan + " (custom quote)" : q.plan + ": " + usd(q.season) + " season (" + usd(q.prepay) + " if paid up front) / " + usd(q.month) + " month / " + usd(q.visit) + " visit" + (q.discounted ? " (10% discount applied)" : ""),
       "Map": linkFor()
     };
   }
