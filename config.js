@@ -11,9 +11,9 @@ window.SNOW_CONFIG = {
   // Seasonal pricing tiers by cleared area (sq ft).
   pricing: {
     home: [
-      { max: 1200, plan: "Home", season: 700, month: 117, visit: 85 },
-      { max: 2500, plan: "Home, corner lot", season: 1250, month: 210, visit: 125 },
-      { max: 5000, plan: "Large home", season: 1800, month: 300, visit: 165 }
+      { max: 1200, plan: "Home", season: 600, month: 100, visit: 75 },
+      { max: 2500, plan: "Home, corner lot", season: 1000, month: 167, visit: 100 },
+      { max: 5000, plan: "Large home", season: 1500, month: 250, visit: 140 }
     ],
     business: [
       { max: 1500, plan: "Entrance + sidewalks", season: 1500, month: 250, visit: 125 },
