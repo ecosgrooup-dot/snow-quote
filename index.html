@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Snow Removal Estimate | MN Snow Removal</title>
+<meta name="description" content="Type your address, mark what you need cleared on the satellite map and get your snow removal price right away. Minneapolis and nearby cities.">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{--bg:#f3f6fa;--panel:#fff;--fg:#14202e;--muted:#5a6b7d;--line:#d5dde7;--brand:#0b3d73;--accent:#0b66c3;
+  --clear:#1e88ff;--salt:#f2b600;--pile:#e5392f;--ok:#12804a;--err:#b3261e}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.top{background:var(--brand);color:#fff}
+.in{max-width:1180px;margin:0 auto;padding:0 16px}
+.top .in{padding-top:14px;padding-bottom:14px;display:flex;justify-content:space-between;align-items:baseline;gap:6px 20px;flex-wrap:wrap}
+.top b{font-size:1.35rem}.top a{color:#fff;text-decoration:none;font-size:.9rem}
+main{padding-top:18px;padding-bottom:40px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.6rem;margin:0;line-height:1.2}
+.sub{color:var(--muted);margin:4px 0 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{display:flex;gap:8px}.search input{flex:1;min-width:0}
+input[type=text],input[type=email],input[type=tel]{font:inherit;color:var(--fg);background:#fff;border:1px solid var(--line);border-radius:7px;padding:11px 12px;width:100%}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--fg);border-radius:7px;padding:10px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+button:disabled{opacity:.55;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+.sep{width:1px;align-self:stretch;background:var(--line)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+#map{height:min(62vh,560px);min-height:340px;border-radius:8px;background:#22303c;cursor:crosshair}
+.hint{font-size:.9rem;color:var(--muted);min-height:1.3em}
+.hint.ok{color:var(--ok);font-weight:600}.hint.err{color:var(--err);font-weight:600}
+dl{display:grid;grid-template-columns:1fr auto;gap:5px 12px;margin:0;font-variant-numeric:tabular-nums}
+dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:600}
+.total{font-size:1.7rem}
+.note{font-size:.82rem;color:var(--muted);margin:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.seg{display:flex;gap:8px}.seg button{flex:1;justify-content:center}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+textarea{font:inherit;font-size:.8rem;width:100%;min-height:110px;border:1px solid var(--line);border-radius:7px;padding:8px}
+[hidden]{display:none!important}
+footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><b>MN Snow Removal</b><a href="tel:+16125645857">Call or text (612) 564-5857</a></div></div>
+
+<main class="in">
+  <div>
+    <h1 id="title">Get your FREE snow removal estimate</h1>
+    <p class="sub" id="lead">Type your address, mark what you need cleared on the map, and see your price right away. No visit, no phone tag.</p>
+  </div>
+
+  <section class="panel" id="searchPanel">
+    <h2>1 · Your address</h2>
+    <form class="search" id="searchForm">
+      <input type="text" id="address" autocomplete="street-address" placeholder="123 Main St, Minneapolis, MN" aria-label="Property address">
+      <button class="primary" id="go">Show my property</button>
+    </form>
+    <div class="hint" id="searchMsg">Homes and small businesses in Minneapolis and nearby cities.</div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>2 · Mark what you need</h2>
+      <div class="row">
+        <button data-kind="c" aria-pressed="true"><span class="sw" style="background:var(--clear)"></span>Clear snow</button>
+        <button data-kind="s" aria-pressed="false"><span class="sw" style="background:var(--salt)"></span>Salt here</button>
+        <button data-kind="p" aria-pressed="false"><span class="sw" style="background:var(--pile)"></span>Pile snow here</button>
+        <span class="sep"></span>
+        <button data-shape="l" aria-pressed="true">Sidewalk</button>
+        <button data-shape="r" aria-pressed="false">Box</button>
+        <button data-shape="p" aria-pressed="false">Corners</button>
+      </div>
+      <div id="map" aria-label="Satellite map of your property"></div>
+      <div class="hint" id="hint">Tap the start and the end of a sidewalk, then press Finish.</div>
+      <div class="row">
+        <button id="finish" class="primary" hidden>Finish shape</button>
+        <button id="undo">Undo</button>
+        <button id="erase">Erase all</button>
+        <button id="suggest" hidden>Back to our suggestion</button>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <h2>3 · Your estimate</h2>
+        <div class="seg">
+          <button data-type="home" aria-pressed="true">Home</button>
+          <button data-type="business" aria-pressed="false">Business</button>
+        </div>
+        <dl>
+          <dt>Area to clear</dt><dd id="aC">0 sq ft</dd>
+          <dt>Salt area</dt><dd id="aS">none</dd>
+          <dt id="planName">Seasonal plan (Nov 15 – Apr 15)</dt><dd class="total" id="pSeason">—</dd>
+          <dt>Or monthly, 6 payments</dt><dd id="pMonth">—</dd>
+          <dt>Or per visit, no contract</dt><dd id="pVisit">—</dd>
+          <dt>Salt / ice melt</dt><dd id="pSalt">not selected</dd>
+        </dl>
+        <p class="note">Every snowfall of 2 inches or more, up to 20 visits per season. Salt is optional and always billed separately. This is an estimate from the satellite view; your final price is confirmed in a simple written agreement.</p>
+      </section>
+
+      <section class="panel">
+        <h2>4 · Send it to us</h2>
+        <label>Your name <input type="text" id="who" autocomplete="name"></label>
+        <label>Email <input type="email" id="email" autocomplete="email"></label>
+        <label>Phone <input type="tel" id="phone" autocomplete="tel"></label>
+        <button class="primary" id="send">Send my request</button>
+        <div class="hint" id="sendMsg">We reply the same day with your written quote.</div>
+        <textarea id="out" readonly hidden aria-label="Your request"></textarea>
+        <p class="note">Your information is safe. We only use it to send your estimate. No spam, no obligation.</p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer>MN Snow Removal, a service of Ecos Group LLC · 3544 Spain Pl, Minneapolis, MN 55418 · (612) 564-5857 · ecosgrooup@gmail.com</footer>
+
+<script src="vendor/leaflet.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
