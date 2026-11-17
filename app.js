@@ -258,7 +258,7 @@
       .then(function (r) {
         $("send").disabled = false;
         if (!r.ok || String(r.j.success) !== "true") throw new Error((r.j && r.j.message) || "rejected");
-        m.textContent = "Thank you! We received your request and will get back to you today."; m.className = "hint ok"; $("out").hidden = true;
+        m.textContent = "Thank you! We received your request. You will get a fast reply."; m.className = "hint ok"; $("out").hidden = true;
       })
       .catch(function (err) {
         $("send").disabled = false;
