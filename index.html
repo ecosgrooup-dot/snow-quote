@@ -75,10 +75,12 @@ main.in{padding-top:16px;padding-bottom:36px;gap:12px}
 .panel{box-shadow:0 1px 3px rgba(16,32,56,.07)}
 #map{border:1px solid #c5d1df}
 .chk{flex-direction:row;align-items:flex-start;gap:8px;color:var(--fg);font-size:.86rem}.chk input{margin-top:3px;width:16px;height:16px;flex:none}
-.promise{margin-bottom:26px}
+.leftcol{display:flex;flex-direction:column;gap:16px;min-width:0}
 .story{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:14px 18px;box-shadow:0 1px 3px rgba(16,32,56,.07)}
-.story h2{font-size:1.15rem;letter-spacing:0;text-transform:none;color:var(--fg);margin:0 0 8px}
-.story ul{margin:0;padding-left:18px;color:#33465a;line-height:1.7}
+.story h2{font-size:1.05rem;letter-spacing:0;text-transform:none;color:var(--fg);margin:0 0 6px}
+.story p{margin:0;color:#33465a;line-height:1.6}
+@media (max-width:880px){.leftcol{display:contents}.story{order:3}}
+footer{padding-top:18px}
 #snow{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden}
 #snow span{position:absolute;top:-20px;color:#8fbdf0;opacity:.7;animation:snowfall linear infinite;text-shadow:0 0 2px rgba(255,255,255,.9)}
 @keyframes snowfall{to{transform:translate(30px,105vh)}}
@@ -110,6 +112,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 
 <main class="in">
   <div class="grid">
+    <div class="leftcol">
     <section class="panel">
       <h2>2 · Pick a color and drag a box on the photo</h2>
       <div class="row">
@@ -128,6 +131,11 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
         <button id="suggest" hidden>Back to our suggestion</button>
       </div>
     </section>
+    <aside class="story" aria-label="About this service">
+      <h2>Snow removal, modernized</h2>
+      <p>We modernized the way snow removal is quoted so you get better service with less hassle. You mark your own property, so our agreement is clear from day one and the misunderstandings of past winters stay behind. Honest prices, clear terms, and the job done right every snowfall. Seniors and neighbors with a disability receive a discount.</p>
+    </aside>
+    </div>
 
     <div class="side">
       <section class="panel">
@@ -170,16 +178,6 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
     </div>
   </div>
 </main>
-<section class="in promise" aria-label="Our promise">
-  <div class="story">
-    <h2>Simple, clear and personal</h2>
-    <ul>
-      <li>Mark what you need and see your price in minutes.</li>
-      <li>It is an estimate. We confirm every detail with you before any work starts.</li>
-      <li>Discounts for seniors and neighbors with a disability. We are here to serve.</li>
-    </ul>
-  </div>
-</section>
 
 <footer>MN Snow Removal, a service of Ecos Group LLC · Minneapolis, MN · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
@@ -193,7 +191,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="config.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
