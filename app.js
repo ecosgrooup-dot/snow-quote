@@ -61,12 +61,45 @@
     return L.polygon(s.p, o);
   }
   var live = null, liveLayer = null, pointers = 0, erasing = false, startPx = null;
-  function render() { layer.clearLayers(); shapes.forEach(function (s) { toLayer(s).addTo(layer); }); }
+  // "After the snowfall" preview: a white blanket over the photo with the areas we clear cut out of it.
+  var winter = false, snowCover = L.layerGroup().addTo(map);
+  function clearedHoles() {
+    var rects = shapes.filter(function (s) { return s.t === "c" && s.k === "r"; }).map(function (s) {
+      return [Math.min(s.p[0][0], s.p[1][0]), Math.min(s.p[0][1], s.p[1][1]), Math.max(s.p[0][0], s.p[1][0]), Math.max(s.p[0][1], s.p[1][1])];
+    });
+    var holes = shapes.filter(function (s) { return s.t === "c" && s.k === "p"; }).map(function (s) { return s.p; });
+    if (!rects.length) return holes;
+    function uniq(a) { return a.sort(function (x, y) { return x - y; }).filter(function (v, i, r) { return !i || v !== r[i - 1]; }); }
+    var ys = uniq(rects.reduce(function (a, r) { return a.concat([r[0], r[2]]); }, [])), xs = uniq(rects.reduce(function (a, r) { return a.concat([r[1], r[3]]); }, []));
+    for (var i = 0; i + 1 < ys.length; i++) {
+      var run = null;
+      for (var j = 0; j + 1 < xs.length; j++) {
+        var cy = (ys[i] + ys[i + 1]) / 2, cx = (xs[j] + xs[j + 1]) / 2;
+        var inside = rects.some(function (r) { return cy > r[0] && cy < r[2] && cx > r[1] && cx < r[3]; });
+        if (inside) { if (!run) run = [xs[j], xs[j + 1]]; else run[1] = xs[j + 1]; }
+        if ((!inside || j + 2 === xs.length) && run) { holes.push(rectPts([ys[i], run[0]], [ys[i + 1], run[1]])); run = null; }
+      }
+    }
+    return holes;
+  }
+  function render() {
+    layer.clearLayers(); snowCover.clearLayers();
+    if (winter) {
+      var c = map.getCenter(), outer = [[c.lat - 0.02, c.lng - 0.03], [c.lat - 0.02, c.lng + 0.03], [c.lat + 0.02, c.lng + 0.03], [c.lat + 0.02, c.lng - 0.03]];
+      L.polygon([outer].concat(clearedHoles()), { stroke: false, fillColor: "#ffffff", fillOpacity: 0.86, fillRule: "evenodd", interactive: false }).addTo(snowCover);
+    }
+    shapes.forEach(function (s) {
+      var l = toLayer(s);
+      if (winter && s.t === "c") l.setStyle(s.k === "l" || s.k === "b" ? { opacity: 0.25 } : { fillOpacity: 0, weight: 2, dashArray: "5 5" });
+      l.addTo(layer);
+    });
+  }
   function canPaint() { return !moving && map.getZoom() >= 17; }
   function baseHint() {
     if (map.getZoom() < 17) return "Type your address above to see your property.";
     if (moving) return "Move the map with your finger. Press Move map again when you are ready.";
     if (erasing) return "Tap any colored box to remove it.";
+    if (winter) return "This is your property after a snowfall. The uncovered areas are what we clear for you.";
     return "Press and drag to draw a box over " + NAME[kind] + ".";
   }
   function setHint(t, cls) { $("hint").textContent = t || baseHint(); $("hint").className = "hint" + (cls ? " " + cls : ""); }
@@ -131,6 +164,11 @@
   document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { kind = b.dataset.kind; moving = false; erasing = false; press("[data-kind]", "data-kind", kind); syncMode(); }; });
   document.querySelectorAll("[data-type]").forEach(function (b) { b.onclick = function () { type = b.dataset.type; press("[data-type]", "data-type", type); stats(); }; });
   $("move").onclick = function () { moving = !moving; syncMode(); };
+  $("winter").onclick = function () {
+    winter = !winter; $("winter").setAttribute("aria-pressed", winter);
+    $("winter").textContent = winter ? "Back to the photo" : "Preview after a snowfall";
+    document.body.classList.toggle("storm", winter); render(); setHint();
+  };
   $("eraser").onclick = function () { erasing = !erasing; moving = false; press("[data-kind]", "data-kind", erasing ? "" : kind); syncMode(); };
   $("undo").onclick = function () { shapes.pop(); render(); stats(); setHint(); };
   $("erase").onclick = function () { shapes = []; render(); stats(); };
@@ -287,6 +325,21 @@
         m.textContent = "We could not send it automatically. Copy the text below and email it to " + CFG.email + " or text it to " + CFG.phone + "."; m.className = "hint err";
       });
   };
+
+  // Real forecast from the National Weather Service: show a badge only when snow is actually expected.
+  (function () {
+    var box = $("wx"); if (!box || !window.fetch) return;
+    fetch("https://api.weather.gov/points/" + CFG.start.lat + "," + CFG.start.lng)
+      .then(function (r) { return r.json(); })
+      .then(function (j) { return fetch(j.properties.forecast); })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var p = (j.properties.periods || []).filter(function (x) { return /snow|flurr|wintry|blizzard/i.test(x.shortForecast || ""); })[0];
+        if (!p) return;
+        box.textContent = "Snow in the Minneapolis forecast: " + p.name + ". " + p.shortForecast + ".";
+        box.hidden = false;
+      }).catch(function () {});
+  })();
 
   // expose for building client links from the console
   window.snowQuote = { link: linkFor, setName: function (name) { clientName = String(name || ""); return linkFor(); } };

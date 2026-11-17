@@ -116,6 +116,11 @@ button.primary{background:linear-gradient(180deg,#1479e0,#0b5cb5);border-color:#
 .total{display:inline-block;transform-origin:right center}
 .methods li{transition:transform .15s,border-color .15s}.methods li:hover{transform:translateY(-2px);border-color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.wx{align-self:flex-start;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:5px 12px;font-size:.86rem;font-weight:600;color:#fff;animation:rise .6s both}
+.wx::before{content:"\2744";margin-right:7px}
+#winter{border-color:var(--accent);color:var(--accent)}
+#winter[aria-pressed=true]{background:var(--accent);color:#fff}
+body.storm #snow span{opacity:.95;color:#cfe4fb}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
@@ -124,6 +129,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <div class="band">
 <div class="top"><div class="in"><b>MN Snow Removal</b><a href="tel:+16125645857">Call or text (612) 564-5857</a></div></div>
 <section class="hero"><div class="in">
+  <div class="wx" id="wx" hidden></div>
   <h1 id="title">Get your <em>FREE</em> snow removal estimate</h1>
   <p class="sub" id="lead">Type your address, mark what you need cleared on the photo, and see your price right away. It takes about two minutes.</p>
   <div class="searchcard" id="searchPanel">
@@ -157,6 +163,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
       <div id="map" aria-label="Satellite map of your property"></div>
       <div class="hint" id="hint">Type your address above to see your property.</div>
       <div class="row">
+        <button id="winter" aria-pressed="false">Preview after a snowfall</button>
         <button id="undo">Undo</button>
         <button id="erase">Erase all</button>
         <button id="suggest" hidden>Back to our suggestion</button>
@@ -223,7 +230,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=23"></script>
-<script src="app.js?v=23"></script>
+<script src="config.js?v=24"></script>
+<script src="app.js?v=24"></script>
 </body>
 </html>
