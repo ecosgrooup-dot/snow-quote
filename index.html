@@ -75,6 +75,14 @@ main.in{padding-top:16px;padding-bottom:36px;gap:12px}
 .panel{box-shadow:0 1px 3px rgba(16,32,56,.07)}
 #map{border:1px solid #c5d1df}
 .chk{flex-direction:row;align-items:flex-start;gap:8px;color:var(--fg);font-size:.86rem}.chk input{margin-top:3px;width:16px;height:16px;flex:none}
+.promise{margin-bottom:26px}
+.story{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(16,32,56,.07)}
+.story h2{font-size:1.15rem;letter-spacing:0;text-transform:none;color:var(--fg);margin:0 0 8px}
+.story p{margin:0 0 10px;max-width:78ch;color:#33465a;line-height:1.6}.story p:last-child{margin-bottom:0}
+#snow{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden}
+#snow span{position:absolute;top:-20px;color:#8fbdf0;opacity:.7;animation:snowfall linear infinite;text-shadow:0 0 2px rgba(255,255,255,.9)}
+@keyframes snowfall{to{transform:translate(30px,105vh)}}
+@media (prefers-reduced-motion:reduce){#snow{display:none}}
 [hidden]{display:none!important}
 footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px}
 </style>
@@ -163,16 +171,14 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
   </div>
 </main>
 <section class="in promise" aria-label="Our promise">
-  <h2>Why we quote this way</h2>
-  <ul>
-    <li><b>Easy.</b> Your quote in minutes, from your phone or computer, on your own schedule.</li>
-    <li><b>Clear.</b> You mark exactly what you want on your own property, so there are no misunderstandings.</li>
-    <li><b>In writing.</b> Before any work starts, we review everything with you in person and put every detail you marked into a clear agreement.</li>
-    <li><b>An estimate, not a bill.</b> The price you see comes from the photo and may change a little. If you would like us to stop by, we can make it even more exact.</li>
-    <li><b>Here to help.</b> We offer discounts for seniors and for neighbors with a disability or limited mobility. Just tell us in your request. We are here to serve our community.</li>
-    <li><b>Our goal.</b> To earn your trust: the best service experience you have had, and the job done right every snowfall.</li>
-  </ul>
+  <div class="story">
+    <h2>Snow removal made simple, clear and personal</h2>
+    <p>We built this page to make getting snow removal easy. You mark exactly what you need on a photo of your own property and see your price in minutes, whenever it suits you. Because you show us precisely what you want, there is no guessing and no misunderstanding later.</p>
+    <p>The price you see is an estimate and may change a little. If you would like us to stop by, we are glad to, and your quote will be even more exact. Before any work begins, we go over every detail with you in person and put it in a clear written agreement.</p>
+    <p>Our goal is to earn your trust by doing the job right every snowfall and by being easy to work with. Seniors and neighbors with a disability or limited mobility receive a discount; just let us know. We are here to serve our community, and we would be honored to take care of your home or business this winter.</p>
+  </div>
 </section>
+
 <footer>MN Snow Removal, a service of Ecos Group LLC · Minneapolis, MN · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
 <div id="snow" aria-hidden="true"></div>
@@ -185,7 +191,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 })();
 </script>
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=12"></script>
-<script src="app.js?v=12"></script>
+<script src="config.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
