@@ -22,6 +22,12 @@
       maxZoom: 21, maxNativeZoom: 19, attribution: "Imagery © Esri, Maxar, Earthstar Geographics"
     }).addTo(map);
   }
+  // Sharper, newer public imagery for the Twin Cities metro (Hennepin 2022 6-inch over metro 2025 1-foot).
+  L.tileLayer.wms("https://imageserver.gisdata.mn.gov/cgi-bin/wms?", {
+    layers: "met25,hen22", format: "image/jpeg", version: "1.1.1", maxZoom: 21, minZoom: 15,
+    bounds: [[44.47, -94.02], [45.42, -92.73]],
+    attribution: "Imagery: MnGeo, Metropolitan Council, Hennepin County"
+  }).addTo(map);
   var layer = L.layerGroup().addTo(map), draftLayer = L.layerGroup().addTo(map), pin = null;
 
   // ---------- geometry ----------
@@ -118,7 +124,7 @@
       .then(function (j) { return j[0] ? { lat: +j[0].lat, lng: +j[0].lon, label: j[0].display_name } : null; });
   }
   function showPlace(p) {
-    place = p; map.setView([p.lat, p.lng], 19);
+    place = p; map.setView([p.lat, p.lng], 20);
     if (pin) pin.remove();
     pin = L.circleMarker([p.lat, p.lng], { radius: 5, color: "#fff", fillColor: "#0b3d73", fillOpacity: 1, weight: 2 }).addTo(map);
   }
