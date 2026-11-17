@@ -68,20 +68,16 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 
   <div class="grid">
     <section class="panel">
-      <h2>2 · Mark what you need</h2>
+      <h2>2 · Pick one, then tap on the map</h2>
       <div class="row">
         <button data-kind="c" aria-pressed="true"><span class="sw" style="background:var(--clear)"></span>Clear snow</button>
         <button data-kind="s" aria-pressed="false"><span class="sw" style="background:var(--salt)"></span>Salt here</button>
         <button data-kind="p" aria-pressed="false"><span class="sw" style="background:var(--pile)"></span>Pile snow here</button>
-        <span class="sep"></span>
-        <button data-shape="l" aria-pressed="true">Sidewalk</button>
-        <button data-shape="r" aria-pressed="false">Box</button>
-        <button data-shape="p" aria-pressed="false">Corners</button>
       </div>
       <div id="map" aria-label="Satellite map of your property"></div>
-      <div class="hint" id="hint">Tap the start and the end of a sidewalk, then press Finish.</div>
+      <div class="hint" id="hint">Tap the corners of what to clear on the map. For a sidewalk, tap its start and its end. Then press Done.</div>
       <div class="row">
-        <button id="finish" class="primary" hidden>Finish shape</button>
+        <button id="finish" class="primary" hidden>Done</button>
         <button id="undo">Undo</button>
         <button id="erase">Erase all</button>
         <button id="suggest" hidden>Back to our suggestion</button>
@@ -122,7 +118,7 @@ footer{color:var(--muted);font-size:.82rem;text-align:center;padding:0 16px 30px
 <footer>MN Snow Removal, a service of Ecos Group LLC · 3544 Spain Pl, Minneapolis, MN 55418 · (612) 564-5857 · ecosgrooup@gmail.com</footer>
 
 <script src="vendor/leaflet.js"></script>
-<script src="config.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="config.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

@@ -2,13 +2,10 @@
   "use strict";
   var CFG = window.SNOW_CONFIG, $ = function (id) { return document.getElementById(id); };
   var COL = { c: "#1e88ff", s: "#f2b600", p: "#e5392f" };
-  var kind = "c", shape = "l", type = "home";
+  var kind = "c", type = "home";
   var shapes = [], draft = [], preset = [], place = null, clientName = "";
-  var HINT = {
-    l: "Tap the start and the end of a sidewalk, then press Finish.",
-    r: "Tap one corner of the area, then the opposite corner.",
-    p: "Tap each corner of the area, then press Finish."
-  };
+  var NAME = { c: "what to clear", s: "where you want salt", p: "where to pile the snow" };
+  function baseHint() { return "Tap the corners of " + NAME[kind] + " on the map. For a sidewalk, tap its start and its end. Then press Done."; }
 
   // ---------- map ----------
   var map = L.map("map", { zoomControl: true, maxZoom: 21, doubleClickZoom: false }).setView([CFG.start.lat, CFG.start.lng], CFG.start.zoom);
@@ -64,31 +61,31 @@
     layer.clearLayers(); draftLayer.clearLayers();
     shapes.forEach(function (s) { toLayer(s).addTo(layer); });
     if (draft.length) {
-      if (draft.length > 1) toLayer({ t: kind, k: shape === "p" ? (draft.length > 2 ? "p" : "l") : "l", p: draft }, { dashArray: "6 6", fillOpacity: 0.25 }).addTo(draftLayer);
-      draft.forEach(function (p) { L.circleMarker(p, { radius: 6, color: "#fff", fillColor: COL[kind], fillOpacity: 1, weight: 2 }).addTo(draftLayer); });
+      if (draft.length > 1) toLayer({ t: kind, k: draft.length > 2 ? "p" : "l", p: draft }, { dashArray: "6 6", fillOpacity: 0.25 }).addTo(draftLayer);
+      draft.forEach(function (p, i) { L.circleMarker(p, { radius: i === 0 && draft.length > 2 ? 9 : 6, color: "#fff", fillColor: COL[kind], fillOpacity: 1, weight: 2, interactive: false }).addTo(draftLayer); });
     }
-    $("finish").hidden = !((shape === "l" && draft.length >= 2) || (shape === "p" && draft.length >= 3));
+    $("finish").hidden = draft.length < 2;
   }
+  // Two points make a sidewalk line; three or more make an area.
   function commit() {
-    if (shape === "l" && draft.length >= 2) shapes.push({ t: kind, k: "l", p: draft });
-    else if (shape === "p" && draft.length >= 3) shapes.push({ t: kind, k: "p", p: draft });
-    draft = []; $("hint").textContent = HINT[shape]; $("hint").className = "hint"; render(); stats();
+    if (draft.length === 2) shapes.push({ t: kind, k: "l", p: draft });
+    else if (draft.length >= 3) shapes.push({ t: kind, k: "p", p: draft });
+    draft = []; $("hint").textContent = baseHint(); $("hint").className = "hint"; render(); stats();
   }
   map.on("click", function (e) {
     var p = [+e.latlng.lat.toFixed(6), +e.latlng.lng.toFixed(6)];
     if (map.getZoom() < 17) { $("hint").textContent = "Type your address first, or zoom in to your property."; $("hint").className = "hint err"; return; }
+    // Tapping the first corner again closes the shape.
+    if (draft.length >= 3 && map.latLngToContainerPoint(draft[0]).distanceTo(map.latLngToContainerPoint(p)) < 18) { commit(); return; }
     draft.push(p);
-    if (shape === "r" && draft.length === 2) { shapes.push({ t: kind, k: "r", p: draft }); draft = []; stats(); }
-    else if (shape === "p") $("hint").textContent = draft.length < 3 ? "Tap each corner of the area." : 'Keep tapping corners, then press "Finish shape".';
-    else if (shape === "l" && draft.length >= 2) $("hint").textContent = 'Tap more points to follow the sidewalk, or press "Finish shape".';
+    $("hint").textContent = draft.length === 1 ? "Good. Tap the next corner." : draft.length === 2 ? "Press Done for a sidewalk, or keep tapping corners for an area." : "Keep tapping corners. Press Done, or tap the first corner again, to close it.";
     $("hint").className = "hint"; render();
   });
 
   function press(sel, attr, val) {
     document.querySelectorAll(sel).forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute(attr) === val); });
   }
-  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { kind = b.dataset.kind; press("[data-kind]", "data-kind", kind); render(); }; });
-  document.querySelectorAll("[data-shape]").forEach(function (b) { b.onclick = function () { shape = b.dataset.shape; draft = []; press("[data-shape]", "data-shape", shape); $("hint").textContent = HINT[shape]; $("hint").className = "hint"; render(); }; });
+  document.querySelectorAll("[data-kind]").forEach(function (b) { b.onclick = function () { if (draft.length >= 2) commit(); else draft = []; kind = b.dataset.kind; press("[data-kind]", "data-kind", kind); $("hint").textContent = baseHint(); $("hint").className = "hint"; render(); }; });
   document.querySelectorAll("[data-type]").forEach(function (b) { b.onclick = function () { type = b.dataset.type; press("[data-type]", "data-type", type); stats(); }; });
   $("finish").onclick = commit;
   $("undo").onclick = function () { if (draft.length) draft.pop(); else shapes.pop(); render(); stats(); };
